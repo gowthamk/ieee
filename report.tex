@@ -1,0 +1,244 @@
+\documentclass[11pt]{article}
+
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{mathpartir}
+\usepackage{fullpage}
+\usepackage{ifpdf}
+\usepackage{deauthor, times, graphicx}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+\usepackage[numbers]{natbib}
+\usepackage{listings}          % format code
+\usepackage{wrapfig}
+\usepackage{xspace}
+
+\ifpdf
+  \usepackage{hyperref}
+  \usepackage{graphicx}
+\else
+  \usepackage[dvips]{graphicx}
+  \usepackage[dvips]{hyperref}
+\fi
+
+\newcounter{copyrightbox}
+
+% Math mode
+%-----------
+\newenvironment{nop}{}{}
+\newenvironment{smathpar}{
+\begin{nop}\small\begin{mathpar}}{
+\end{mathpar}\end{nop}\ignorespacesafterend}
+
+% Listings
+%----------
+\lstloadlanguages{haskell}
+\newcommand{\lsthaskell}{\lstset{
+      language=haskell,
+      basicstyle=\ttfamily\ninett\footnotesize,
+      flexiblecolumns=false,
+			tabsize=2,
+      %basewidth={0.5em,0.45em},
+      %aboveskip={3pt},
+      %belowskip={3pt},
+      keywordstyle=\color{blue}\bfseries,
+      commentstyle=\color{darkgreen}\itshape,
+      morekeywords={foldl,fold},
+			classoffset=1,
+			upquote=true,
+			keywordstyle=\color{Fuchsia}\bfseries,
+			classoffset=0,
+			mathescape=true,
+      literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 % {=}{{$=$}}1
+               {>}{{$>$}}1 {<}{{$<$}}1
+							 {dollar}{{\$}}1
+               {\\\\}{{\char`\\\char`\\}}1
+               {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+               {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2
+               {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+               {>>}{{>>}}2 {>>=}{{>>=}}2 {=<<}{{=<<}}2
+               {|}{{$\mid$}}1
+							 {(-}{{$\in$}}1
+						   {psi1}{{$\psi_1$}}1 {psi2}{{$\psi_2$}}1
+							 {cup}{{$\cup$}}1
+							 {cap}{{$\cap$}}1
+							 {forall}{{$\forall$}}1
+							 {vee}{{$\vee$}}1
+							 {wedge}{{$\wedge$}}1
+               {`member`}{{$\in$}}1
+               {s.empty}{{\{\}}}1
+               {leftbrace}{\{}1
+               {rightbrace}{\}}1
+               {profile0sing}{{ \{{\tt profile0}\}}}1
+               {\$singleton\$startv}{{ \hspace{2.4em} \{{\tt startv}\}}}1
+               {\$singleton\$n}{{  \{{\tt n}\}}}1
+               {dotdotdot}{{$\ldots$}}3
+    }}
+\lstnewenvironment{codehaskell}
+    { % \centering
+			\lsthaskell
+      \lstset{}%
+      \csname lst@setfirstlabel\endcsname}
+    { %\centering
+      \csname lst@savefirstlabel\endcsname}
+
+\newcommand{\lstml}{
+\lstset{ %
+language=ML, % choose the language of the code
+basicstyle=\small\ttfamily,       % the size of the fonts that are used for the code
+keywordstyle=\color{Bittersweet},
+% numbers=left,                   % where to put the line-numbers
+numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+% frame=single,                   % adds a frame around the code
+tabsize=2,                      % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+commentstyle=\itshape\color{MidnightBlue},
+%escapeinside={\%*}{*)},         % if you want to add a comment within your code
+morekeywords={relation, not, : , /\\}
+}}
+\lstnewenvironment{codeml}
+    { % \centering
+			\lstml
+      \lstset{}%
+      \csname lst@setfirstlabel\endcsname}
+    { %\centering
+      \csname lst@savefirstlabel\endcsname}
+\newcommand{\lstruby}{
+\lstset{ %
+language=Ruby, % choose the language of the code
+basicstyle=\small\ttfamily,       % the size of the fonts that are used for the code
+keywordstyle=\color{Bittersweet},
+% numbers=left,                   % where to put the line-numbers
+numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+% frame=single,                   % adds a frame around the code
+tabsize=2,                      % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+commentstyle=\itshape\color{MidnightBlue},
+%escapeinside={\%*}{*)},         % if you want to add a comment within your code
+morekeywords={}
+}}
+\lstnewenvironment{coderuby}
+    { % \centering
+			\lstruby
+      \lstset{}%
+      \csname lst@setfirstlabel\endcsname}
+    { %\centering
+      \csname lst@savefirstlabel\endcsname}
+% Formatting
+%---------
+\newcommand{\name}{{\sc Quelea}\xspace}
+\newcommand{\C}[1]{\code{#1}}
+\newcommand{\inang}[1]{\langle #1 \rangle}
+\newcommand{\N}[1]{{\normalfont #1}}
+\newcommand{\vis}[2]{\N{\textsf{vis}(#1,#2)}}
+\newcommand{\visZ}{\N{\textsf{vis}}}
+\newcommand{\soZ}{\N{\textsf{so}}}
+\newcommand{\sameobj}[2]{\N{\textsf{sameobj}(#1,#2)}}
+\newcommand{\sameobjZ}{\N{\textsf{sameobj}}}
+\newcommand{\txnZ}{\N{\textsf{txn}}}
+\newcommand{\txn}[2]{\txnZ\{#1\}\{#2\}}
+\newcommand*{\rom}[1]{\expandafter\romannumeral #1}
+\newcommand{\tauhat}{\hat{\tau}}
+\newcommand{\xswith}{\bowtie}
+\newcommand{\visar}{\xrightarrow{\visZ}}
+\newcommand{\writef}{\N{\textsf{write}}}
+\newcommand{\isWritef}{\N{\textsf{isWrite}}}
+\newcommand{\readf}{\N{\textsf{read}}}
+\newcommand{\isReadf}{\N{\textsf{isRead}}}
+\newcommand{\rwf}{\N{\textsf{any}}}
+\newcommand{\obj}{\N{\textsf{obj}}}
+
+% Formatting commands
+% -------------------
+\newcommand{\code}[1]{\,{\tt #1}\,}
+\newcommand{\spc}[0]{\quad}
+\newcommand{\ALT}{~\mid~}
+\newcommand{\rel}[1]{{R}_{\mathit{#1}}}
+\newcommand{\conj}{~\wedge~}
+\newcommand{\disj}{~\vee~}
+\newcommand{\rulelabel}[1]{\textrm{\sc {#1}}}
+\newcommand{\ilrulelabel}[1]{{\sc #1}}
+\newcommand{\RULE}[2]{\frac{\begin{array}{c}#1\end{array}}
+                           {\begin{array}{c}#2\end{array}}}
+\date{}
+\begin{document}
+
+\title{A Language Framework for Programming With Weak Consistency and
+Isolation}
+%\subtitle{Research Summary}
+
+% \author{Gowtham Kaki \\ \small{Purdue University} \hspace*{0.1in}
+%   \small{{\tt gkaki@purdue.edu}} }
+
+\maketitle
+
+\begin{abstract}
+% Due to the inevitable tradeoff between consistency and availability in
+% an asynchronous distributed system, a geo-distributed application is
+% forced to choose between either being strongly consistent or being
+% highly availabile. Motivated by the strong correlation between high
+% availability and user satisfaction, 
+Geo-distributed web applications often favor high availability over
+strong consistency. Reacting to their needs, modern-day replicated
+data stores eschew sequential consistency and relational data model,
+in favor of weaker eventual consistency (EC) and a simple key-value
+data model. While EC and key-value data model are sufficient for most
+operations supported by a typical web application, there nonetheless
+exist a few critical operations that require stronger consistency
+guarantees and richer data models. Few off-the-shelf EC stores do
+offer tunable consistency levels and richer replicated data types to
+address the need. However, these solutions often have poorly-defined
+ad hoc semantics that is too low-level from the perspective of an
+application, and often strongly tied to the respective implementations
+of the data store. While such low-level implementation-dependent
+solutions do not readily cater to the high-level requirements of an
+application, relying on ill-defined guarantees may even complicate the
+already-hard task of reasoning about application semantics under
+eventual consistency. 
+
+In this paper, we describe \name, a declarative programming model for
+eventually consistent data stores that delivers application
+programmers from having to reason in terms of the low-level
+implementation-specific semantics of the data store. \name completely
+abstracts the actual implementation of the data store from the
+application programmer, instead encouraging the programmer to reason
+in terms of an abstract model of the store, and develop applications
+by defining and composing high-level replicated data types.  \name is
+equipped with a formal specification language that is capable of
+expressing precise semantics of high-level consistency guarantees
+(eg., causal consistency) in the abstract model. Any eventually
+consistent key-value store can support \name by implementing a thin
+shim layer and a set of high-level consistency guarantees on top of
+its existing low-level interface. We describe one such implementation
+of \name on top of Cassandra, complete with the support for causal and
+sequential consistency guarantees, and coordination-free transactions.
+We present a case study to demonstrate the practical utility of \name.
+
+
+\end{abstract}
+
+\input{introduction}
+
+
+{
+%\small
+\bibliographystyle{plainnat} \small \bibliography{report}
+}
+
+\end{document}
+

@@ -1,14 +1,14 @@
 all:
-	pdflatex -shell-escape report
-##pdflatex -shell-escape report
-##bibtex report
-##bibtex report
-##pdflatex -shell-escape report
-##bibtex report
-##pdflatex -shell-escape report
+	pdflatex -shell-escape ieeede
+	pdflatex -shell-escape ieeede
+	bibtex ieeede
+	bibtex ieeede
+	pdflatex -shell-escape ieeede
+	bibtex ieeede
+	pdflatex -shell-escape ieeede
 
 fast:
-	pdflatex -shell-escape report
+	pdflatex -shell-escape ieeede
 
 clean:
 	rm *.aux *.out *.log *.bbl

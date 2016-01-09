@@ -212,22 +212,23 @@ already-hard task of reasoning about application semantics under
 eventual consistency. 
 
 In this paper, we describe \name, a declarative programming model for
-eventually consistent data stores that delivers application
-programmers from having to reason in terms of the low-level
-implementation-specific semantics of the data store. \name completely
-abstracts the actual implementation of the data store from the
-application programmer, instead encouraging the programmer to reason
-in terms of an abstract model of the store, and develop applications
-by defining and composing high-level replicated data types.  \name is
+eventually consistent data stores. A novel aspect of \name is that it
+completely abstracts the actual implementation of the data store, thus
+delivering application programmers from having to reason about their
+application in terms of the low-level implementation-specific
+semantics of the data store. Instead, programmers can reason in terms
+of an abstract model of the data store, and develop applications by
+defining and composing high-level replicated data types. \name is
 equipped with a formal specification language that is capable of
 expressing precise semantics of high-level consistency guarantees
 (eg., causal consistency) in the abstract model. Any eventually
 consistent key-value store can support \name by implementing a thin
-shim layer and a set of high-level consistency guarantees on top of
-its existing low-level interface. We describe one such implementation
-of \name on top of Cassandra, complete with the support for causal and
-sequential consistency guarantees, and coordination-free transactions.
-We present a case study to demonstrate the practical utility of \name.
+shim layer and a choosen set of high-level consistency guarantees on
+top of its existing low-level interface. We describe one such
+implementation of \name on top of Cassandra, complete with the support
+for causal and sequential consistency guarantees, and
+coordination-free transactions. We present a case study of a large web
+application benchmark demonstrate the practical utility of \name.
 
 
 \end{abstract}
@@ -237,7 +238,7 @@ We present a case study to demonstrate the practical utility of \name.
 
 {
 %\small
-\bibliographystyle{plainnat} \small \bibliography{report}
+\bibliographystyle{plainnat} \small \bibliography{all}
 }
 
 \end{document}

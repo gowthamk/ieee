@@ -1,2 +1,169 @@
 \section{Introduction}
 \label{sec:intro}
+
+Eventual consistency facilitates high availability, but eventually consistent
+replication leads to anomalies that have been
+well-documented~\cite{Burckhardt2014, pldi15, Session, Dynamo, RedBlue}. While
+applications are willing to tolerate most of these anomalies, there are some
+that adversely effect the user experience, hence need to be avoided. For
+instance, a social network application can tolerate out-of-order delivery of
+unrelated posts, but causally related posts need to be delivered in the causal
+order; a comment cannot be delivered before the post itself. The view count of
+a video on Youtube need not necessarily reflect the actual count, but it
+shouldn't appear to be decreasing. A bank account application may not always
+show the accurate balance in an account, but neither should it let the balance
+go below zero, nor should it display a negative balance. Bare eventual
+consistency is often too weak to ensure such high-level application
+invariants; stronger consistency guarantees are needed. To help applications
+enforce such high-level invariants, off-the-shelf replicated data stores, such
+as Cassandra and Riak, offer tunable consistency levels on per-operation
+basis: applications can specify the consistency level for every read and write
+operation they perform on the data store. However, consistency levels offered
+by the off-the-shelf stores are often defined at a very low level. For
+example, consistency levels in Cassandra and Riak assume the values of
+\C{ONE}, \C{TWO}, \C{QUORUM}, \C{ALL} etc., desribing how many nodes in the
+distributed system of the store must respond before a read or write operation
+is declared success. It is not immediately apparent what permutation of these
+low-level consistency guarantees would let the application enforce its
+high-level level invariants. For instance, what should be the consistency
+level of reads and writes to the \C{posts} table\footnote{We use the word
+\emph{table} as an all-encompassing term for various key-value abstractions
+provided by data stores.} so as to guarantee the causal order delivery of
+posts in the aforementioned social network application? 
+
+Furthermore, the semantics of low-level consistency guarantees are not
+uniform across stores. For instance, while \C{QUORUM} means
+\emph{strict quorum} (i.e., Lamport's quorum~\cite{LamportQuorum}) in
+case of Cassandra, it means a \emph{sloppy quorum}~\cite{Dynamo} in
+Riak. Complicating the matters further, the semantics are often
+imprecisely, or even inaccurately, defined in the informal
+vendor-hosted documentations of data stores. For instance, Datastax's
+Cassandra documentation~\cite{dxlwt} claims that one can achieve
+``strong consistency'' with ``quorum reads and writes'' in Cassandra.
+While this claim appears reasonable superficially (because a pair of
+quorum operations are serialized at one node, at least), it is
+incomplete, at best, and inaccurate otherwise\footnote{The devil is in
+the details of the timestamp-based last-writer-wins conflict
+resolution strategy in Cassandra, which need not necessarily pick the
+last writer due to the inevitable clock drift across
+nodes.~\cite{TyconCassandra} and~\cite{JepsenCassandra} present
+counterexamples and a more accurate claim.}. Another example of a
+low-level consistency enforcement construct with vaguely defined
+semantics is Cassandra's Compare-and-Set (CAS) operation, which is
+advertised as a ``lightweight transaction'' and exposed as a
+conditional write query (eg., \C{INSERT INTO users VALUES … IF NOT
+EXISTS}).  Addition of CAS to Cassandra was coupled with the
+introduction of a new consistency level named \C{SERIAL}.  Strangely,
+\C{SERIAL} is not a valid query-level consistency parameter for a
+write (conditional or not), while the rest (eg., \C{ONE}) are
+valid\footnote{Given the advertised use cases for lightweight
+transactions (such as maintaining uniqueness of usernames), one might
+expect a CAS to be SERIAL by default. It is therefore unintuitive that
+CAS accepts a consistency parameter, at least to the developers of
+cassandra-cql, a popular Haskell library for programming with
+Cassandra, whose API for CAS operation incorrectly hardcodes the
+parameter to SERIAL. This bug has been reported and fixed.}.
+Furthermore, Cassandra accepts a new \emph{protocol-level} consistency
+parameter for a CAS operation (can be set to SERIAL), and its informal
+description doesn't explain how this parameter interacts with the
+query-level consistency parameter.  The only way to unravel this
+complexity is to understand the nitty-gritty of the Paxos-based
+implementation of CAS in Cassandra. In this quagmire of low-level
+implementation details, it is easy to lose track of the original
+intent: to obtain the high-level guarantees required by the
+application.  
+
+As applications become more complex, the default abstraction offered
+by the most replicated data stores, namely, a key-value map with
+simple conflict resolution strategy (eg., last-writer-wins), is no
+longer enough. For instance, a highly available shopping cart
+application, such as Amazon's, cannot rely on an LWW key-value store
+to store the current contents of a shared shopping cart, because LWW
+strategy always discards all but one of the concurrent updates to the
+cart. Instead, what the application needs is a replicated \C{set} data
+type, with a nuanced conflict resolution strategy that, for example,
+merges non-conflicting updates using set union, and reconciles
+conflicting updates by prioritizing additions over deletions. The need
+for eventually consistent replicated data types with non-trivial
+conflict resolution strategies has been felt in the context of many
+other applications, that it spurred a whole new line of research on
+Conflict-free Replicated Data Types (CRDTs)~\cite{crdts}. There are
+now data stores that complement their default key-value abstraction
+with CRDTs. The 2.0 release of Riak, for example, supports five
+different CRDTs - a flag, register, counter, set, and a map.  However,
+as acknowledged by Riak's own documentation on CRDTs, there is a vast
+and ever-growing body of literature proposing new CRDTs to suit
+various application requirements. While it is practically impossible
+to keep up with the pace of developments in CRDT research, it is also
+a bad software engineering practice to implement application-specific
+semantics at the database layer. If the wide-spread adoption of
+Ruby-on-Rails is any indicator, then programmers are also averse to
+relying on vendor-specific features at the database layer, because it
+adversely affects the portability of their
+application~\cite{BailisSIGMOD15}. The other alternative  is for the
+programmers to implement  the CRDTs they require in their application
+on top of the key-value interface provided by the EC store. Indeed,
+this is a hard engineering problem, as evident from the experience of
+engineers at Instagram~\cite{BransonC2013}, who, at the expense of few
+man-months, have implemented an op-based AWOR set CRDT on top of
+Cassandra's wide rows. Moreover, this approach results in solutions
+that are strongly coupled with semantics of the application and the
+data store, hence are not reusable across applications and data
+stores.
+
+In this paper, we describe \name, a declarative programming framework
+for eventually consistent data stores that was build to address the
+issues discussed above. \name can be realized as a thin layer on top
+of any off-the-shelf eventually consistent key-value store, and as
+such provides a uniform implementation-independent interface to the
+store. \name programmers reason in terms of an abstract model of the
+ECDS, and any functionality offered by the store in addition to bare
+eventual consistency, including stronger consistency guarantees,
+transactions with tunable isolation levels etc., is required to have
+well-defined semantics in the abstract model. We show that various
+high-level consistency guarantees (eg., causal consistency) and
+various well-known isolation levels for transactions (eg., read
+committed) indeed have well-defined semantics in the abstract model.
+\name is equipped with an expressive specification language that lets
+data store developers succintly describe the semantics of the
+functionality they offer. A similar specification language is exposed
+to the application programmers, who declare the consistency
+requirements of their application as specifications. Specifications
+are constructed using primitive consistency relations such as
+\emph{visibility} and \emph{session order} along with standard logical
+and relational operators. A novel aspect of \name is that it can
+compare the specifications written by application programmers and data
+store developers, and automatically map application's requirements to
+the appropriate store-level guarantees. Consequently, \name
+programmers can write portable code that automatically adapts to any
+data store that exposes its functionality via \name. 
+
+Another key advantage of \name is that it lets application programmers
+define new replicated data types without they having to be explicitly
+supported by the underlying data store. For instance, all the five
+CRDTs that are currently supported by Riak can be succintly
+implemented in \name at the application layer, and the implementations
+continue to work over Cassandra, which does not natively support
+CRDTs. Moreover, operations over CRDTs in \name can be executed under
+stronger consistency guarantees, which is currently not possible with
+their native counterparts in Riak. We have implemented \name as a
+shallow extension of Haskell, supported by a transparent shim layer on
+top of Cassandra. Our implementation supports coordination-free
+transactions over arbitrary data types, thus allowing programmers to
+compose various CRDTs. We have implemented various CRDTs, including
+the AWOR-set CRDT mentioned in the context of Instagram previously, in
+\name. None of our implementations require more than 100LOC,
+demonstrating the power of abstractions offered by \name. We have
+conducted a variety of experiments with our implementations of CRDTs
+to study their performance, and the results are summarized in
+\S.~\ref{sec:experiments}.
+
+Rest of this paper is organized as following. The next section
+describes the abstract system model. The following section describes a
+sample application to demonstrate the style of programming promoted by
+\name. We also cover the anomalies exhibited by the application under
+eventual consistency, which highlights the need for stronger
+consistency guarantees with well-defined high-level semantics.
+~\S~\ref{sec:language} introduces \name's specification language, and
+presents the specifications of various high-level consistency
+guarantees. 

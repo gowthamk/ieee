@@ -7,7 +7,7 @@ all:
 	bibtex ieeede
 	pdflatex -shell-escape ieeede
 
-fast:
+haste:
 	pdflatex -shell-escape ieeede
 
 clean:

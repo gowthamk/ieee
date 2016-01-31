@@ -120,40 +120,45 @@ Isolation}
 % highly availabile. Motivated by the strong correlation between high
 % availability and user satisfaction, 
 Geo-distributed web applications often favor high availability over
-strong consistency. Reacting to their needs, modern-day replicated
-data stores eschew sequential consistency in favor of weaker eventual
-consistency (EC). While most operations a typical web application
-supports can be engineered to function under EC, there nonetheless
-exist a few critical operations that require stronger consistency
-guarantees. Few off-the-shelf eventually consistent key-value stores
-do offer tunable consistency levels to address the need. However,
-these consistency levels often have poorly-defined ad hoc semantics
-that is too low-level from the perspective of an application, and
-often strongly tied to the respective implementations of the data
-store. While such low-level implementation-dependent solutions do not
-readily cater to the high-level requirements of an application,
-relying on ill-defined guarantees may even complicate the already-hard
-task of reasoning about application semantics under eventual
-consistency. 
+strong consistency.  In response to this bias, modern-day replicated
+data stores often eschew sequential consistency in favor of weaker
+eventual consistency (EC) data semantics. While most operations
+supported by a typical web application can be engineered, with
+sufficient care, to function under EC, there are oftentimes critical
+operations that require stronger consistency guarantees. A few
+off-the-shelf eventually consistent key-value stores offer tunable
+consistency levels to address the need for varying consistency
+guarantees.  However, these consistency levels often have
+poorly-defined \emph{ad hoc} semantics that is usually too low-level
+from the perspective of an application to relate their guarantees to
+the invariants that must be respected by the application.  Moreover,
+these guarantees are often defined in way that is strongly influenced
+by a specific implementation of the data store.  While such low-level
+implementation-dependent solutions do not readily cater to the
+high-level requirements of an application, relying on ill-defined
+guarantees additionally complicates the already hard task of reasoning
+about application semantics under eventual consistency.
 
 In this paper, we describe \name, a declarative programming model for
 eventually consistent data stores. A novel aspect of \name is that it
-completely abstracts the actual implementation of the data store, thus
-delivering application programmers from having to reason about their
-application in terms of the low-level implementation-specific
-semantics of the data store. Instead, programmers can reason in terms
-of an abstract model of the data store, and develop applications by
-defining and composing high-level replicated data types. \name is
-equipped with a formal specification language that is capable of
-expressing precise semantics of high-level consistency guarantees
-(eg., causal consistency) in the abstract model. Any eventually
-consistent key-value store can support \name by implementing a thin
-shim layer and a choosen set of high-level consistency guarantees on
-top of its existing low-level interface. We describe one such
-implementation of \name on top of Cassandra, complete with the support
-for causal and sequential consistency guarantees, and
-coordination-free transactions. We present a case study of a large web
-application benchmark demonstrate the practical utility of \name.
+abstracts the actual implementation of the data store via high-level
+programming and system-level models that are agnostic to a specific
+implementation of the data store.  By doing so, \name\ frees
+application programmers from having to reason about their application
+in terms of low-level implementation specific data store semantics.
+Instead, programmers can now reason in terms of an abstract model of
+the data store, and develop applications by defining and composing
+high-level replicated data types. \name is equipped with a formal
+specification language that is capable of expressing precise semantics
+of high-level consistency guarantees (\emph{e.g.}, causal consistency)
+in the abstract model.  Any eventually consistent key-value store can
+support \name by implementing a thin shim layer and a choosen set of
+high-level consistency guarantees on top of its existing low-level
+interface.  We describe one such instantiation on top of Cassandra,
+that includes support for causal and sequential consistency
+guarantees, and coordination-free transactions. We present a case
+study of a large web application benchmark to demonstrate \name's
+practical utility.
 
 
 \end{abstract}

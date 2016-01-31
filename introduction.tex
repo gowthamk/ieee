@@ -1,107 +1,115 @@
 \section{Introduction}
 \label{sec:intro}
 
-Eventual consistency facilitates high availability, but eventually
-consistent replication leads to anomalies that have been
+Eventual consistency facilitates high availability, but can lead to
+surprising anomalies that have been
 well-documented~\cite{Burckhardt2014, pldi15, Session, Dynamo,
-RedBlue}. While applications are willing to tolerate most of these
+  RedBlue}. While applications can often tolerate many of these
 anomalies, there are some that adversely effect the user experience,
-hence need to be avoided. For instance, a social network application
-can tolerate out-of-order delivery of unrelated posts, but causally
-related posts need to be delivered in the causal order; a comment
-cannot be delivered before the post itself. The view count of a video
-on Youtube need not necessarily reflect the actual count, but it
-shouldn't appear to be decreasing. A bank account application may not
-always show the accurate balance in an account, but neither should it
-let the balance go below zero, nor should it display a negative
-balance. Bare eventual consistency is often too weak to ensure such
-high-level application invariants; stronger consistency guarantees are
-needed. To help applications enforce such high-level invariants,
-off-the-shelf replicated data stores, such as Cassandra and Riak,
-offer tunable consistency levels on per-operation basis: applications
-can specify the consistency level for every read and write operation
-they perform on the data store. However, consistency levels offered by
-the off-the-shelf stores are often defined at a very low level. For
+and hence need to be avoided. For instance, a social network
+application can tolerate out-of-order delivery of unrelated posts, but
+causally related posts need to be delivered in causal order;
+\emph{e.g.,}, a comment cannot be delivered before the post
+itself. The view count of a video on Youtube need not necessarily
+reflect the precise count of the number of views, but it should not
+appear to be decreasing. A bank account application may not always
+show the accurate balance in an account, but neither should it let the
+balance go below zero, nor should it admit operations that would
+lead it to display a negative balance.
+
+Bare eventual consistency is often too weak to ensure such high-level
+application invariants; stronger consistency guarantees are needed. To
+help applications enforce such high-level invariants, off-the-shelf
+replicated data stores, such as Cassandra and Riak, offer tunable
+consistency levels on a per-operation basis: applications can specify
+the consistency level for every read and write operation they perform
+on the data store. However, consistency levels offered by these
+off-the-shelf stores are often defined at a very low-level. For
 example, consistency levels in Cassandra and Riak assume the values of
-\C{ONE}, \C{TWO}, \C{QUORUM}, \C{ALL} etc., desribing how many nodes
-in the distributed system of the store must respond before a read or
-write operation is declared success. It is not immediately apparent
-what permutation of these low-level consistency guarantees would let
-the application enforce its high-level level invariants. For instance,
-what should be the consistency level of reads and writes to the
-\C{posts} table\footnote{We use the word \emph{table} as an
-all-encompassing term for various key-value abstractions provided by
-data stores.} so as to guarantee the causal order delivery of posts in
-the aforementioned social network application? 
+\C{ONE}, \C{TWO}, \C{QUORUM}, \C{ALL} etc., desribing how many
+physically distributed comprising the store must respond before a read
+or write operation is declared successful.  It is not immediately
+apparent what permutation of these low-level consistency guarantees
+would let the application enforce its high-level level invariants. For
+instance, what should be the consistency level of reads and writes to
+the \C{posts} table\footnote{We use the word \emph{table} as an
+  all-encompassing term for various key-value abstractions provided by
+  data stores.} to guarantee causal order delivery of posts in the
+aforementioned social network application?
 
 Furthermore, the semantics of low-level consistency guarantees are not
-uniform across stores. For instance, while \C{QUORUM} means
-\emph{strict quorum} (i.e., Lamport's quorum~\cite{LamportQuorum}) in
-case of Cassandra, it means a \emph{sloppy quorum}~\cite{Dynamo} in
-Riak. Complicating the matters further, the semantics are often
-imprecisely, or even inaccurately, defined in the informal
-vendor-hosted documentations of data stores. For instance, Datastax's
-Cassandra documentation~\cite{dxlwt} claims that one can achieve
-``strong consistency'' with ``quorum reads and writes'' in Cassandra.
-While this claim appears reasonable superficially (because a pair of
-quorum operations are serialized at one node, at least), it is
-incomplete, at best, and inaccurate otherwise\footnote{The devil is in
-the details of the timestamp-based last-writer-wins conflict
-resolution strategy in Cassandra, which need not necessarily pick the
-last writer due to the inevitable clock drift across
-nodes.~\cite{TyconCassandra} and~\cite{JepsenCassandra} present
-counterexamples and a more accurate claim.}. Another example of a
-low-level consistency enforcement construct with vaguely defined
-semantics is Cassandra's Compare-and-Set (CAS) operation, which is
-advertised as a ``lightweight transaction'' and exposed as a
+uniform across different store implementations. For instance, while
+\C{QUORUM} means \emph{strict quorum} (i.e., Lamport's
+quorum~\cite{LamportQuorum}) in the case of Cassandra, it means a
+\emph{sloppy quorum}~\cite{Dynamo} in Riak. Complicating matters yet
+further, consistency semantics is often imprecisely, or even
+inaccurately, defined in the informal vendor-hosted documentations.
+For instance, Datastax's Cassandra documentation~\cite{dxlwt} claims
+that one can achieve ``strong consistency'' with ``quorum reads and
+writes'' in Cassandra.  While this claim appears reasonable
+superficially (because a pair of quorum operations are serialized at
+one node, at least), it is incomplete, at best, and inaccurate at
+worst.\footnote{The devil is in the details of the timestamp-based
+  last-writer-wins conflict resolution strategy in Cassandra, which
+  need not necessarily pick the last writer due to inevitable clock
+  drift across nodes.~\cite{TyconCassandra} and~\cite{JepsenCassandra}
+  present counterexamples and a more accurate claim.}  Another example
+of a low-level consistency enforcement construct with vaguely defined
+semantics is Cassandra's Compare-and-Set ({\sc cas}) operation, which
+is advertised as a ``lightweight transaction'' and exposed as a
 conditional write query (eg., \C{INSERT INTO users VALUES … IF NOT
-EXISTS}).  Addition of CAS to Cassandra was coupled with the
-introduction of a new consistency level named \C{SERIAL}.  Strangely,
-\C{SERIAL} is not a valid query-level consistency parameter for a
-write (conditional or not), while the rest (eg., \C{ONE}) are
-valid\footnote{Given the advertised use cases for lightweight
-transactions (such as maintaining uniqueness of usernames), one might
-expect a CAS to be SERIAL by default. It is therefore unintuitive that
-CAS accepts a consistency parameter, at least to the developers of
-cassandra-cql, a popular Haskell library for programming with
-Cassandra, whose API for CAS operation incorrectly hardcodes the
-parameter to SERIAL. This bug has been reported and fixed.}.
-Furthermore, Cassandra accepts a new \emph{protocol-level} consistency
-parameter for a CAS operation (can be set to SERIAL), and its informal
-description doesn't explain how this parameter interacts with the
-query-level consistency parameter.  The only way to unravel this
-complexity is to understand the nitty-gritty of the Paxos-based
-implementation of CAS in Cassandra. In this quagmire of low-level
-implementation details, it is easy to lose track of the original
-intent: to obtain the high-level guarantees required by the
-application.  
+  EXISTS}).  The addition of {\sc cas} to Cassandra was coupled with
+the introduction of a new consistency level named \C{SERIAL}.
+Surprisingly, \C{SERIAL} is not a valid query-level consistency
+parameter for a write (conditional or not), while the others
+(\emph{e.g.}, \C{ONE}) are valid.\footnote{Given the advertised use
+  cases for lightweight transactions (such as maintaining uniqueness
+  of usernames), one might expect a {\sc cas} to be \C{SERIAL} by
+  default. It is therefore unintuitive that {\sc cas} accepts a
+  consistency parameter, at least to the developers of cassandra-cql,
+  a popular Haskell library for programming with Cassandra, whose API
+  for {\sc cas} operation incorrectly hardcodes the parameter to
+  \C{SERIAL}. This bug has been reported and fixed.}  Furthermore,
+Cassandra accepts a new \emph{protocol-level} consistency parameter
+for a {\sc CAS} operation that can be set to \C{SERIAL}, but its
+informal description doesn't explain how this parameter interacts with
+the query-level consistency parameter.  The only way to unravel this
+complexity is to understand low-level details of the operator's
+underlying Paxos-based implementation.  Mired in this quagmire of
+low-level implementation details, it is easy to lose track of our
+original goal - ensuring the high-level semantics guarantees required
+by the application are met as efficiently as possible by the
+implementation.
 
 In this paper, we describe \name, a declarative programming framework
 for eventually consistent data stores that was build to address the
 issues discussed above. \name can be realized as a thin layer on top
 of any off-the-shelf eventually consistent key-value store, and as
-such provides a uniform implementation-independent interface to the
-store. \name programmers reason in terms of an abstract model of the
-ECDS, and any functionality offered by the store in addition to bare
-eventual consistency, including stronger consistency guarantees,
-transactions with tunable isolation levels etc., is required to have
-well-defined semantics in the abstract model. We show that various
+such, provides a uniform implementation-independent interface to the
+data store. \name programmers reason in terms of an abstract system
+model of an eventually consistent data store (ECDS), and any
+functionality offered by the store in addition to bare eventual
+consistency, including stronger consistency guarantees, transactions
+with tunable isolation levels etc., is required to have a well-defined
+semantics in the context of this abstract model. We show that various
 high-level consistency guarantees (eg., causal consistency) and
 various well-known isolation levels for transactions (eg., read
-committed) indeed have well-defined semantics in the abstract model.
-\name is equipped with an expressive specification language that lets
-data store developers succintly describe the semantics of the
-functionality they offer. A similar specification language is exposed
-to the application programmers, who declare the consistency
-requirements of their application as specifications. Specifications
-are constructed using primitive consistency relations such as
+committed) indeed enjoy such properties.  \name is additionally
+equipped with an expressive specification language that lets data
+store developers succintly describe the semantics of the functionality
+they offer. A similar specification language is exposed to application
+programmers, who can declare the consistency requirements of their
+application as axiomatic specifications. Specifications are
+constructed using primitive consistency relations such as
 \emph{visibility} and \emph{session order} along with standard logical
 and relational operators. A novel aspect of \name is that it can
-compare the specifications written by application programmers and data
-store developers, and automatically map application's requirements to
-the appropriate store-level guarantees. Consequently, \name
-programmers can write portable code that automatically adapts to any
-data store that exposes its functionality via \name. 
+directly compare the specifications written by application programmers
+and data store developers since both are written within the same
+specification language, and can thus automatically map application
+requirements to the appropriate store-level guarantees. Consequently,
+\name programmers can write portable code that automatically adapts to
+any data store that can express its functionality in terms of \name's
+abstract system model.
 
 Another key advantage of \name is that it allows the addition of new
 replicated data types (RDTs) to the store, which obviates the need to
@@ -112,7 +120,8 @@ separately from its consistency properties (i.e., \emph{when} updates
 become visible).  This separation of concerns permits
 \emph{operational} reasoning for conflict resolution, and
 \emph{declarative} reasoning for consistency.  The combination of
-these techniques enhances the programmability of the store.
+these techniques enhances overall programmability and simplifies
+reasoning about application correctness.
 
 % Rest of this paper is organized as following. The next section
 % describes the abstract system model. The following section describes a

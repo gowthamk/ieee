@@ -21,9 +21,9 @@ inc hist _ = ((), Just Inc)
 \end{figure}
 
 Figure~\ref{fig:ex} shows the implementation of a counter RDT in
-\name. The data type \cf{Ctr} represents the effect type of counter.
+\name. The data type \cf{Ctr} represents the counter's effect type.
 Every RDT in \name is associated with an effect type that specifies
-the effects allowed on the objects of that type. RDT itself is defined
+the effects allowed on the objects of that type.  An RDT is defined
 merely a list of its effects. The type of an RDT operation is an
 instance of the following type, written in Haskell syntax:
 
@@ -31,12 +31,12 @@ instance of the following type, written in Haskell syntax:
 type Operation e a r = [e] -> a -> (r, Maybe e)
 \end{codehaskell}
 
-\noindent An operation on RDT accepts a list of effects (the
+\noindent An operation on an RDT accepts a list of effects (the
 \emph{history} of updates representing the state of the object at some
 replica), and an input argument, and returns a result along with an
 optional effect.  While a read-only operation (eg., \rcf{read})
 generates no effect (i.e., it returns \cf{Nothing}), a write-only
-operation (eg., \rcf{inc}) exclusively returns a new effect.
+operation (eg., \rcf{inc}) returns a new effect.
 
 \subsection{Anomalies under Eventual Consistency}
 
@@ -71,13 +71,13 @@ thus violating the monotonicity invariant.
 
 In order for counter's value to appear monotonically increasing, the
 second \rcf{read} should also witness the effect of \rcf{inc}, because
-it was witnessed by the preceding \rcf{read}. Clearly, eventually
-consistent \rcf{read} operations do not ensure this property;
+it was witnessed by the preceding \rcf{read}. Because eventually
+consistent \rcf{read} operations do not ensure this property,
 \rcf{read} operations need to be executed at a stronger consistency
-level. The choice of consistency level should let us guarantee that if
+level. The choice of consistency level must guarantee that if
 a \rcf{read} witnesses an \rcf{inc} effect, all the subsequent
-\rcf{read} operations on the same counter object also witness the
-\rcf{inc} effect. If we let $\sameobjZ$ relate effects over the same
+\rcf{read} operations on the same counter object also witness that
+effect. If we let $\sameobjZ$ relate effects over the same
 object, we can formalize this requirement using visibility ($\visZ$)
 and session order ($\soZ$) relations:
 \begin{cmathpar}
@@ -130,7 +130,7 @@ The syntax of our specification language is shown in Figure
 ~\ref{fig:specification-lang}. The language is based on first-order logic
 (FOL), and admits prenex universal quantification over typed and
 untyped effect variables. We use a special effect variable ($\cureff$)
-to denote the effect of \emph{current operation} - the operation for
+to denote the effect of the \emph{current operation} - the operation for
 which a specification is being written. The type of an effect is
 simply the name of the operation (eg: \rcf{inc}) that induced the
 effect.  We admit disjunction in types to let an effect variable range
@@ -146,7 +146,7 @@ primitive relations. Commonly used derived relations are the
 \emph{same object session order} ($\small \sooZ = \soZ ~\cap~
 \sameobjZ$), \emph{happens-before order} ($\small \hbZ = (\soZ ~\cup~
 \visZ)^+$) and the \emph{same object happens-before order} ($\small
-\hboZ = (\sooZ ~\cup~ \visZ)^+$). For example, same object session
+\hboZ = (\sooZ ~\cup~ \visZ)^+$). For example, the same object session
 order ($\sooZ$) can be used to succintly represent the specification
 of counter RDT's consistency requirement:
 \begin{cmathpar}
@@ -169,13 +169,12 @@ of counter RDT's consistency requirement:
 \subsection{Consistency Guarantees}
 
 To help programmers eliminate certain class of anomalies in their
-applications, Terry et al. equip their data store Bayou~\cite{Bayou}
+applications, Terry \emph{et al.} equip their data store Bayou~\cite{Bayou}
 with four incomparable consistency levels called \emph{session
-guarantees}~\cite{Session}. While Terry et al. realize efficient
+guarantees}~\cite{Session}. While Terry \emph{et al.} realize efficient
 implementations of session guarantees making use of low-level
-properties of their store, the semantics of the guarantees can
-nonetheless can be captured succintly in the abstract model of \name
-as following:
+properties of their store, the semantics of these guarantees can
+nonetheless can be captured succintly within \name's abstract model thus:
 \begin{smathpar}
 \renewcommand{\arraystretch}{1.2}
 \begin{array}{rcl}
@@ -190,41 +189,39 @@ as following:
 \vis{a}{d}
 \end{array}
 \end{smathpar}
-Consider Monotonic Reads (MR) session guarantee. The semantics of MR
+Consider a Monotonic Reads (MR) session guarantee. The semantics of MR
 guarantees that if the effect of an operation $a$ is visible to the
 effect of $b$, and $b$ precedes $c$ in (same object) session order,
 then $a$ will also be made visible to $c$. Recall that this is
 precisely the guarantee required by the counter to enforce
-monotonicity. In fact, by restricting the bound variable $a$ in MR
+monotonicity. In fact, by restricting the bound variable $a$ in MR's
 specification to range over \rcf{inc} effects, and bound variables $b$
-and $c$ to range over \rcf{read} effects, we obtain the specification
-we associated with the counter. This lets us trivially conclude that
-executing \rcf{read} at MR consistency level is sufficient to enforce
-the monotonicity invariant. 
+and $c$ to range over \rcf{read} effects, we can easily conclude that
+executing \rcf{read} at an MR consistency level is sufficient to
+enforce the monotonicity invariant.
 
 Like MR, the semantics of other session guarantees are categorically
 stated by their specifications. Read-Your-Writes (RYW), for example,
 guarantees that an operation ($b$) witnesses the effect of every
 preceding operation ($a$) in the session. A \rcf{read} operation
 executed at RYW consistency level therefore witnesses every previous
-\rcf{inc} operation from the same session. This guarantee is
-imperative to avoid the anomaly shown in Fig.~\ref{fig:missingUpdate},
-where a \rcf{read} that succeeds an \rcf{inc} fails to witness the
-effect of \rcf{inc}, but a later \rcf{read} witnesses the effect. The
-anomaly can also be avoided by running \rcf{inc} and \rcf{read} under
-the QUORUM consistency level offered by some off-the-shelf key-value
-stores, but it requires non-trivial reasoning with semantics of quorum
-(eg., strict/sloppy) and conflict resolution strategies (eg., LWW) to
-arrive at this conclusion. In contrast, reasoning with high-level
-consistency guarantees, such as MR and RYW, circumvents this
-complexity.
+\rcf{inc} operation from the same session. This guarantee is necessary
+to avoid the anomaly shown in Fig.~\ref{fig:missingUpdate}, where a
+\rcf{read} that succeeds an \rcf{inc} fails to witness the effect of
+\rcf{inc}, but a later \rcf{read} witnesses the effect. The anomaly
+can also be avoided by running \rcf{inc} and \rcf{read} under the
+QUORUM consistency level offered by some off-the-shelf key-value
+stores, but doing so requires non-trivial reasoning over the semantics
+of quorum operations (\emph{e.g.}, strict/sloppy) and conflict
+resolution strategies (eg., LWW) to arrive at this conclusion. In
+contrast, reasoning with high-level consistency guarantees, such as MR
+and RYW, circumvents this complexity.
 
-While high-level consistency guarantees are easy to reason about, the
-reasoning is not always trivial. Nonetheless, the precise
-characterization of guarantees as specifications facilitates the use
-of automatic analysis to determine if a consistency level meets
-application requirements. For instance, consider a data store that
-offers the following three consistency levels:
+The precise characterization of guarantees as specifications
+facilitates the use of automatic analyses to determine if a
+consistency level meets application requirements. For instance,
+consider a data store that offers the following three consistency
+levels:
 \begin{smathpar}
 \renewcommand{\arraystretch}{1.2}
 \begin{array}{rcl}
@@ -237,24 +234,24 @@ offers the following three consistency levels:
 \end{array}
 \end{smathpar}
 It is not immediately apparent which among CV, CC and SC meet
-the requirements of counter (CR). Fortunately, an automatic theorem
-prover (eg., Z3) can be used to prove that specification of CR is
+the requirements of a counter (CR). Fortunately, we can leverage the power of automated theorem
+prover (\emph{e.g.}, Z3)  to prove that the specification of CR is
 stronger than CV, but weaker than CC and SC, thus letting us
 deduce that counter's requirements can be met both under causal and
-strong consistency levels. Theorem prover can also prove that among
+strong consistency levels. A theorem prover can also be used to prove that among
 CC and SC, CC is weaker. Assuming that weaker guarantees incur
-lesser cost of availability, it is reasonable to conclude that
+lower cost to enforce availability, it is reasonable to conclude that
 counter's \rcf{read} operations should be executed under causal
-consistency level to enforce the monotonicity invariant. 
+consistency to enforce  monotonicity. 
 
-The analysis described informally above is formalized as
-\emph{classification scheme}~\cite{pldi15} in \name. Classification
-scheme completely automates the choice of consistency levels in \name,
-thus eliminating the need for programmers to understand the semantics
-of consistency levels. The ease of reasoning with categorically stated
-high-level guarantees demonstrates the advantage of exposing the
-functionality of the data store via \name, as against the low-level ad
-hoc interfaces currently offered by many \ecds.
+The analysis described informally above is formalized as a
+\emph{classification scheme}~\cite{pldi15} in \name.  This scheme
+completely automates the choice of consistency levels in \name, thus
+eliminating the need for programmers to understand the semantics of
+different consistency levels. The ease of reasoning with precisely
+stated high-level guarantees demonstrates the advantage of exposing
+the functionality of the data store via \name, as against the
+low-level ad hoc interfaces currently offered by many \ecds.
 
 
 

@@ -39,6 +39,7 @@ generates no effect (i.e., it returns \cf{Nothing}), a write-only
 operation (eg., \rcf{inc}) returns a new effect.
 
 \subsection{Anomalies under Eventual Consistency}
+\label{sec:anomalies}
 
 \begin{figure}[ht]
 \centering
@@ -167,6 +168,7 @@ of counter RDT's consistency requirement:
 % antecedent of implication should guarantee 
 
 \subsection{Consistency Guarantees}
+\label{sec:classification-scheme}
 
 To help programmers eliminate certain class of anomalies in their
 applications, Terry \emph{et al.} equip their data store Bayou~\cite{Bayou}

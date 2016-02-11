@@ -4,7 +4,7 @@
 The abstract model of \name, optionally extended with a choosen set of
 high-level consistency and isolation guarantees, can be instantiated
 on top any eventually consistent key-value store. We now describe a
-reference implementation of \name on top of Cassandra key-value
+reference implementation of \name on top of Cassandra's key-value
 store~\cite{Cassandra}. Our implementation supports CV, CC, and SC
 consistency levels (\S~\ref{sec:classification-scheme}) for data type
 operations, and RC, MAV, and RR isolation levels
@@ -24,7 +24,7 @@ BigTable~\cite{BigTable}. Each row is identified by a composite
 \emph{primary key}, whose first component is the \emph{partition key},
 and remaining components are \emph{clustering columns}. Like
 Dynamo~\cite{Dynamo}, Cassandra uses consistent hashing on partition
-key to map rows to machines in the cluster that maintain a replica.
+keys to map rows to machines in the cluster that maintain a replica.
 Hence, rows with the same partition key (together referred to as a
 \emph{partition}) are mapped to the same machine\footnote{Dynamo's
 consistent hashing maps a partition key to a \emph{vnode}, which, in
@@ -69,23 +69,23 @@ guarantees, such as session guarantees described in
 
 The consistency semantics of replicated data types are implemented and
 enforced in the \emph{shim layer} above Cassandra. The overall system
-architecture is shown in Fig.~\ref{fig:impl_mod}. Note that shim layer
-node simply acts as a soft-state write-through cache and can safely be
-terminated at any point. Similarly, new shim layer nodes can be
-spawned on demand.
+architecture is shown in Fig.~\ref{fig:impl_mod}. Note that the shim
+layer node simply acts as a soft-state write-through cache and can
+safely be terminated at any point. Similarly, new shim layer nodes can
+be spawned on demand.
 
-The shim layer maintains a causal-visibility-consistent
+The shim layer maintains a causal-visibility consistent
 (CV-consistent) in-memory state of a subset of objects in the system.
 A CV-consistent state of an object is a subset of effects on the
 object that are closed under the visibility relation.  In other words,
 the shim layer includes an effect $e$ over an object $o$, only if it
 also includes all effects $e'$ over $o$ that are visible to $e$ (i.e.,
 $\vis{e'}{e}$). Since all read operations are served by the shim
-layer, a read operation only ever witnesses CV-consistent state of its
-object. Thus, CV consistency level is offered by default in this
+layer, a read operation only ever witnesses a CV-consistent state of its
+object. Thus, a CV consistency level is offered by default in this
 implementation of \name.
 
-The shim layer nodes periodically fetch updates from the backing
+The shim layer nodes periodically fetches updates from the backing
 store, thereby ensuring that later operations witness more recent
 CV-consistent state. For causally consistent operations, however,
 updates need to be fetched on-demand. For example, if a causally
@@ -95,17 +95,17 @@ in the shim layer state of $o$, then a blocking read query for a row
 with primary key $(o,s,i-1)$ needs to be issued by the shim layer.
 
 Strongly consistent operations are performed after obtaining a
-distributed global lock. Distributed lock can be implemented with the
+distributed global lock. Distributed locks can be implemented with the
 help of Cassandra's conditional updates (lightweight transactions). To
-prevent deadlocks due to crash failures of lock owner, the lock is
+prevent deadlocks due to crash failures of the lock owner, the lock is
 leased only for a pre-determined amount of time. Lease functionality
-is implemented using Cassandra's support for and expiring columns.
+is implemented using Cassandra's support for expiring columns.
 
 \subsection{Transactions}
 
 Multi-key coordination-free transactions are implemented in \name by
-exploiting shim layer's default CV consistency guarantee. Recall that
-the the shim layer does not include an effect unless all its
+exploiting the shim layer's default CV consistency guarantee. Recall that
+the shim layer does not include an effect unless all its
 dependencies are also included. For every transaction, \name
 instantiates a special transaction marker effect $m$ that is is
 included as a dependence to every effect generated in the transaction.
@@ -128,20 +128,20 @@ Any generated effects are added to this snapshot.
 
 Observe that the state of an object in \name grows monotonically as
 more effectful operations are performed on the object. Unbounded
-growth of state makes querying prohibitively expensive at some point.
-To keep the state in check, \name summarizes the object state both in
-the shim layer node and the backing store, typically when the number
-of effects on an object crosses a tunable threshold. \name's
+growth of state would make querying prohibitively expensive at some
+point.  To keep state size in check, \name summarizes object state
+both in the shim layer node and the backing store, typically when the
+number of effects on an object crosses a tunable threshold. \name's
 summarization is similar in nature to the \emph{major compaction}
 operation on \emph{SSTables} in BigTable.  While BigTable's compaction
 summarizes reads and writes at the storage layer, \name summarizes
 effects with application-specific semantics at the application layer.
-Hence, semantics of summarization in \name is application-specific.
-\name therefore requires its applications to implement a special
-\cf{summarize} function that is called whenever the state needs to be
-summarized. For example, bank account RDT's \cf{summarize} function
-may summarize a state comprising multiple \cf{withdraw} and
-\cf{deposit} effects into a single \cf{deposit} effect, thus
-drastically reducing the number of effects that need to be kept track
-of by the shim layer and the store.
+Hence, the semantics of summarization in \name is
+application-specific.  \name therefore requires its applications to
+implement a special \cf{summarize} function that is called whenever
+the state needs to be summarized. For example, a bank account RDT's
+\cf{summarize} function may summarize a state comprising multiple
+\cf{withdraw} and \cf{deposit} effects into a single \cf{deposit}
+effect, thus drastically reducing the number of effects that need to
+be kept track of by the shim layer and the store.
 

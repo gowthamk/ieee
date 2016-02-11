@@ -2,13 +2,13 @@
 \label{sec:transactions}
 
 Real-world applications often need to perform atomic operations that
-span multiple objects. An example is the \C{transfer} operation on
-bank accounts, which needs to perform \C{withdraw} one one bank
-account, and \C{deposit} on another. Transactions are usually the
-preferred means to compose sets of operations into a single atomic
-operation. However, classical ACID transaction model requires
-inter-replica coordination, leading to the loss of availability. To
-address this problem, several recent
+span multiple objects. An example is a \C{transfer} operation on bank
+accounts, which needs to perform a \C{withdraw} operation on one bank
+account, and a \C{deposit} operation on another. Transactions are
+usually the preferred means to compose sets of operations into a
+single atomic operation. However, a classical ACID transaction model
+requires inter-replica coordination, leading to the loss of
+availability. To address this problem, several recent
 systems~\cite{Walter,Burckhardt2012,BailisHAT} have proposed
 \emph{coordination-free transactions} that offer atomicity, remain
 available under network partitions, but only provide weaker isolation
@@ -18,7 +18,7 @@ overheads.  Fortunately, the semantics of a large subset of such
 transactions can be captured elegantly in the abstract model of \name.
 Towards this end, we extend the contract language with a new term
 under quantifier-free propositions - ${\small \txnZ}~S_1~S_2$, where
-$S_1$ and $S_2$ are sets of effects, and introduce a new primitive
+$S_1$ and $S_2$ are sets of effects, and which introduces a new primitive
 equivalence relation $\small \sametxnZ$ that holds for effects from
 the same transaction. $\small \txn{a,b}{c,d}$ is just syntactic sugar
 for $\small \sametxn{a}{b} ~\wedge~ \sametxn{c}{d} ~\wedge~
@@ -35,12 +35,12 @@ entirety, or it is not visible at all:
 
 \subsection{Isolation Requirements}
 
-\S~\ref{sec:anomalies} demonstrates how consistency requirements of
-counter RDT's \C{read} operation can be expressed in \name. In a
+\S~\ref{sec:anomalies} demonstrates how the consistency requirements of
+a counter RDT's \C{read} operation can be expressed in \name. In a
 similar manner, \name's specification language allows applications to
 declare isolation requirements for their transactions.
 
-Consider an implementation of bank account RDT in \name with three
+Consider an implementation of a bank account RDT in \name with three
 operations -- \rcf{withdraw}, \rcf{deposit}, and \rcf{getBalance},
 each with straightforward semantics. Additionally, we define two
 transactions -- \cf{save(amt)}, which transfers \cf{amt} from current
@@ -71,17 +71,15 @@ The \cf{atomically} construct ensures that the effects of the
 operations are made visible atomically. However, atomicity itself is
 insufficient in this case, as it does not guarantee that both
 \cf{getBalance} operations (in \cf{totalBalance}) witness the effects
-of \cf{save}, if one of them witnesses. Consequently, the
-\cf{getBalance} on \cf{s} may not witness the \cf{deposit} on \cf{s}
-from \cf{save}, although \cf{getBalance} on \cf{c} witnesses the
-\cf{withdraw} on \cf{c}, resulting in \cf{totalBalance} reporting
-inconsistent balance.
+of \cf{save}.  Consequently, \cf{getBalance} on \cf{s} may not
+witness the \cf{deposit} on \cf{s} from \cf{save}, although
+\cf{getBalance} on \cf{c} witnesses the \cf{withdraw} on \cf{c},
+resulting in \cf{totalBalance} reporting an inconsistent balance.
 
 Observe that the aforementioned anomaly can be averted by requiring
-that both \cf{getBalance} opertions in \cf{totalBalance} transaction
-to witness the same set of \cf{save} transactions. This requirement
-can be captured succintly in the specification language of \name as
-following:
+that both \cf{getBalance} opertions in a \cf{totalBalance} transaction
+witness the same set of \cf{save} actions. This requirement can be
+captured succintly in our specification language:
 \begin{cmathpar}
 \begin{array}{l}
 \forall (a, b:\rcf{getBalance}),(c:\rcf{withdraw} \vee \rcf{deposit}),
@@ -89,14 +87,14 @@ following:
 \hspace*{2in}\txn{a,b}{c,d} ~\wedge~ \vis{c}{a} ~\wedge~ \sameobj{d}{b} \Rightarrow \vis{d}{b}
 \end{array}
 \end{cmathpar}
-\noindent The key idea in the above definition is to use $\small
+\noindent The key idea in the above definition is to use the $\small
 \txnZ$ primitive to relate operations on different objects performed
 in a single transaction.
 
 \subsection{Isolation Guarantees}
 \label{sec:isolation-guarantees}
 
-Isolation semantics of a transaction determines how the transaction
+The isolation semantics of a transaction determines how the transaction
 witnesses the effects of previously committed transactions\footnote{It
 is informative to compare isolation with atomicity. While the former
 constrains how the current transaction witnesses the effects of other
@@ -152,8 +150,8 @@ sufficient to execute \cf{totalBalance} at RR isolation level.
 The ease of reasoning with precisely stated high-level guarantees thus
 extends to transactions as well. Furthermore, the ability to express
 the isolation requirements of an application, along with the semantics
-of various isolation guarantees provided by the store in the
-specification language of \name allows us to define a classification
+of various isolation guarantees provided by the store in the \name's
+specification language allows us to define a classification
 scheme~\cite{pldi15}, similar to the one in
 \S~\ref{sec:classification-scheme}, to automatically map requirements
-to guarantees. 
+to guarantees.

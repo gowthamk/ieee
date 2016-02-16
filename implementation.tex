@@ -74,16 +74,17 @@ layer node simply acts as a soft-state write-through cache and can
 safely be terminated at any point. Similarly, new shim layer nodes can
 be spawned on demand.
 
-The shim layer maintains a causal-visibility consistent
-(CV-consistent) in-memory state of a subset of objects in the system.
-A CV-consistent state of an object is a subset of effects on the
-object that are closed under the visibility relation.  In other words,
+The shim layer maintains a causally-consistent
+ in-memory state of a subset of objects in the system.
+A causally-consistent state of an object is a subset of effects on the
+object that are closed under the $\hboZ$ relation. In other words,
 the shim layer includes an effect $e$ over an object $o$, only if it
-also includes all effects $e'$ over $o$ that are visible to $e$ (i.e.,
-$\vis{e'}{e}$). Since all read operations are served by the shim
-layer, a read operation only ever witnesses a CV-consistent state of its
-object. Thus, a CV consistency level is offered by default in this
-implementation of \name.
+also includes all effects $e'$ over $o$ that happened before $e$ (i.e.,
+$\hbo{e'}{e}$). Since all read operations are served by the shim
+layer, a read operation only ever witnesses a causally-consistent state of its
+object. Recall that this is precisely the CV consistency level
+described in \S~\ref{sec:classification-scheme}. Thus, CV is the
+default consistency level in this implementation of \name.
 
 The shim layer nodes periodically fetches updates from the backing
 store, thereby ensuring that later operations witness more recent

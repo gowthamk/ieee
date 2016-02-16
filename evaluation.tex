@@ -3,4 +3,39 @@
 
 We have used \name to implement a various applications, which include
 individual RDTs as well as larger applications composed of several
-RDTs.
+RDTs. In order to ensure certain high-level invariants, these
+applications require various kinds of consistency and isolation
+guarantees from the data store. For instance, the microblogging
+application requires causal consistency for one of its \cf{getTweet}
+operation to ensure the causal order delivery of tweets
+(\S~\ref{sec:intro}). RUBiS~\cite{RUBiS}, an eBay-like auction site,
+requires MAV isolation level for its \cf{cancelBid} transaction to
+maintain the integrity of data in its materialized views. If an
+application developer were to implement these applications on top of
+the default interfaces exposed by a typical off-the-shelf data store,
+she would either have to rely on ill-specified low-level functionality
+of the store, or build the required high-level functionality herself.
+With \name, we were able to derive the high-level guarantees required
+by these applications by merely stating their requirements as
+specifications with respect to the abstract model\footnote{Both
+specifications combined span less than 5 lines. Source code available
+at \url{https://github.com/kayceesrk/Quelea/tree/master/tests}}.
+
+For performance evaluation, we commissioned Amazon EC2 instances, and
+deployed \name applications in an environment similar to the
+production environment of medium-scale web applications. We then ran
+these applications on realisitic workloads constructed from standard
+benchmarks, such as YCSB~\cite{YCSB} and RUBiS bidding mix. Our
+experiments~\cite{pldi15} show that (a). \name's expressive
+programming model incurs no more than 30\% (resp. 20\%) of latency
+(resp. throughput) overhead when compared to the native implementation
+on top of Cassandra (both run under default consistency levels) with
+512 concurrent clients, and (b). with a distribution of 50\% SC, 25\%
+CC, and 25\% EC operations, \name incurred 41\% (18\%) higher latency
+(lower throughput) than 100\% EC operations, when compared to 162\%
+(52\%) higher latency (lower throughput) incurred by 100\% SC
+operations. These experiments demonstrate that the performance penalty
+of supporting \name on top of an existing key-value stores within
+reasonable limits, and that there is a significant performance
+incentive for applications to rely on \name to enforce their
+high-level invariants rather than choosing SC for every operation.

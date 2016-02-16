@@ -1,0 +1,20 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Although modern web applications settle for eventual consistency in
+return for high availability, they nonetheless need stronger
+consistency guarantees to support small, yet significant, fraction of
+their functionality. The de facto interfaces exposed by well-known
+eventually consistent data stores are often ill-specified and too
+low-level from the perspective of an application developer. There
+currently exists a wide chasm between the high-level
+application-specific consistency requirements, and low-level
+store-specific tunable consistency levels. This paper describes \name,
+a programming framework and a system that proposes to address this gap
+by lifting and standardizing the interface to an eventually consistent
+data store.  We present many examples that demonstrate the advantage
+of reasoning with high-level interface exposed by \name, when compared
+to the low-level interfaces offered by off-the-shelf data stores. We
+realize an instantiation of \name on top of Cassandra, and illustrate
+the performance implications of using \name, for both, applications
+and data stores.

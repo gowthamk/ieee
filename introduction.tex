@@ -32,9 +32,7 @@ or write operation is declared successful.  It is not immediately
 apparent what permutation of these low-level consistency guarantees
 would let the application enforce its high-level level invariants. For
 instance, what should be the consistency level of reads and writes to
-the \C{posts} table\footnote{We use the word \emph{table} as an
-  all-encompassing term for various key-value abstractions provided by
-  data stores.} to guarantee causal order delivery of posts in the
+the \C{posts} table to guarantee causal order delivery of posts in the
 aforementioned social network application?
 
 Furthermore, the semantics of low-level consistency guarantees are not
@@ -52,8 +50,8 @@ one node, at least), it is incomplete, at best, and inaccurate at
 worst.\footnote{The devil is in the details of the timestamp-based
   last-writer-wins conflict resolution strategy in Cassandra, which
   need not necessarily pick the last writer due to inevitable clock
-  drift across nodes.~\cite{TyconCassandra} and~\cite{JepsenCassandra}
-  present counterexamples and a more accurate claim.}  Another example
+  drift across nodes.~\cite{JepsenCassandra}
+  presents a counterexample.}  Another example
 of a low-level consistency enforcement construct with vaguely defined
 semantics is Cassandra's Compare-and-Set ({\sc cas}) operation, which
 is advertised as a ``lightweight transaction'' and exposed as a

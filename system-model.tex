@@ -50,15 +50,14 @@ witnesses the effect ($inc^x_3$) of a single \emph{x.inc} operation.
 A visibility relation between two effects implies that the former
 operation has happened before the latter (since the latter has
 witnessed the effect of the former). However, visibility is not enough
-to capture a happens-before order between operations, necessary to
-enforce causal consistency. As Fig.~\ref{fig:sysmod} demonstrates, a
-pair of operations from the same session, although one happens before
-the other, need not be visible to each other. To capture
-happens-before, we define an irreflexive transitive \emph{session
-  order} relation that relates the effects of operations arising from
-the same session. For example, in Fig.~\ref{fig:sysmod}, $inc^x_4$ and
-$inc^x_5$ are in session order (written logically as $\small
-\so{inc^x_4}{inc^x_5}$).
+to capture a happens-before order between operations. As
+Fig.~\ref{fig:sysmod} demonstrates, a pair of operations from the same
+session, although one happens before the other, need not be visible to
+each other. To capture happens-before, we define an irreflexive
+transitive \emph{session order} relation that relates the effects of
+operations arising from the same session. For example, in
+Fig.~\ref{fig:sysmod}, $inc^x_4$ and $inc^x_5$ are in session order
+(written logically as $\small \so{inc^x_4}{inc^x_5}$).
 
 The effect added to a particular replica is asynchronously sent to
 other replicas, and eventually merged into all other replicas. Observe

@@ -6,18 +6,22 @@
 \begin{figure}
 \small
 \begin{codehaskell}
-data Ctr = Inc
-
-type Counter = [Ctr]
-
+-- CtrEff is the data type of counter effects. 
+-- Inc is its only inhabitant.
+data CtrEff = Inc
+-- Counter (rather, its state) is defined simply 
+-- as a list of counter effects.
+type Counter = [CtrEff]
+-- A read operation reads the value of the counter
+-- by counting the number of Inc effects.
 read :: Counter -> () -> (Int, Maybe Ctr)
 read hist _ = (length hist, Nothing)
-
+-- An inc operation simply generates an Inc effect.
 inc :: Counter -> () -> ((), Maybe Ctr)
 inc hist _ = ((), Just Inc)
 \end{codehaskell}
 %\captionsetup{singlelinecheck=off}
-\caption{Definition of a counter expressed in Quelea.}
+\caption{Definition of a counter expressed in Quelea (Haskell syntax).}
 \label{fig:ex}
 \end{figure}
 
@@ -26,7 +30,7 @@ Figure~\ref{fig:ex} shows the implementation of a counter RDT in
 Every RDT in \name is associated with an effect type that specifies
 the effects allowed on the objects of that type.  An RDT is defined
 merely a list of its effects. The type of an RDT operation is an
-instance of the following type, written in Haskell syntax:
+instance of the following type, written in Haskell syntax as:
 
 \begin{codehaskell}
 type Operation e a r = [e] -> a -> (r, Maybe e)
@@ -120,7 +124,7 @@ language.
 R				& \in & \mathtt{Relation}	& \coloneqq & \visZ \ALT \soZ \ALT \sameobjZ \ALT = \ALT R \cup R \ALT R \cap R \ALT R^+ \\
 \end{array}
 \end{smathpar}
-\caption{Syntax of the specification language.}
+\caption{Syntax (Context-Free Grammar) of the specification language.}
 \label{fig:specification-lang}
 \end{figure}
 
@@ -153,6 +157,18 @@ of counter RDT's consistency requirement:
 \; \vis{a}{b} \conj \soo{b}{c} \Rightarrow \vis{a}{c} 
 \end{array}
 \end{cmathpar}
+Same object happens-before order ($\hboZ$) captures causal order among
+operations on same object. For example, if an \rcf{inc} is visible to
+a \rcf{read}, and the \rcf{read} precedes another \rcf{read} in
+session order (all operations on the same counter object), then the
+\rcf{inc} and the second \rcf{read} are related by $\hboZ$, although
+they may not be directly related by $\visZ$ or $\sooZ$. The causal
+relationship is transitive, via the first \rcf{read}. As such, $\hboZ$
+is useful to capture the causal consistency condition, which requires
+an operation to witness all the causally preceding operations perfomed
+on the same object (i.e., operations that precede the current
+operation in $\hboZ$). This condition is formalized in the following
+section.
 % Not all syntactically valid \name specifications are well-formed.
 % Well-formedness conditions (defined in~\cite{pldi15}) impose certain
 % restrictions. For example, a specification can only request visibility

@@ -12,7 +12,7 @@ availability. To address this problem, several recent
 systems~\cite{Walter,Burckhardt2012,BailisHAT} have proposed
 \emph{coordination-free transactions} that offer atomicity, remain
 available under network partitions, but only provide weaker isolation
-guarantees. Several variants of coodination-free transactions have
+guarantees. Several variants of coordination-free transactions have
 subtly different isolation semantics and widely varying runtime
 overheads.  Fortunately, the semantics of a large subset of such
 transactions can be captured elegantly in the abstract model of \name.
@@ -24,8 +24,8 @@ the same transaction. $\small \txn{a,b}{c,d}$ is just syntactic sugar
 for $\small \sametxn{a}{b} ~\wedge~ \sametxn{c}{d} ~\wedge~
 \neg\sametxn{a}{c}$, where $a$ and $b$ considered to belong to the
 \emph{current} transaction. Since atomicity is a defining
-characteristic of a transaction, we include the following axiom in
-$\Delta$, which guarantees that a transaction is visible in its
+characteristic of a transaction, we extend our formal model with the
+following axiom, which guarantees that a transaction is visible in its
 entirety, or it is not visible at all:
 
 \begin{cmathpar}
@@ -77,9 +77,9 @@ witness the \cf{deposit} on \cf{s} from \cf{save}, although
 resulting in \cf{totalBalance} reporting an inconsistent balance.
 
 Observe that the aforementioned anomaly can be averted by requiring
-that both \cf{getBalance} opertions in a \cf{totalBalance} transaction
+that both \cf{getBalance} operations in a \cf{totalBalance} transaction
 witness the same set of \cf{save} actions. This requirement can be
-captured succintly in our specification language:
+captured succinctly in our specification language:
 \begin{cmathpar}
 \begin{array}{l}
 \forall (a, b:\rcf{getBalance}),(c:\rcf{withdraw} \vee \rcf{deposit}),
@@ -101,7 +101,7 @@ constrains how the current transaction witnesses the effects of other
 transactions, the later determines how other transactions witness the
 effects of the current transaction.}. As mentioned previously, the
 isolation semantics of many variants of coordination-free transactions
-can be expressed in \name's specfication language. For demonstration,
+can be expressed in \name's specification language. For demonstration,
 we pick three well-understood coordination-free transactions -- Read
 Committed (RC)~\cite{Berenson95}, Monotonic Atomic View
 (MAV)~\cite{BailisHAT} and Repeatable Read (RR)~\cite{Berenson95}, and
@@ -109,24 +109,24 @@ express their isolation semantics in \name.
 
 ANSI RC isolation level guarantees that a transaction only witnesses
 the effects of committed transaction:
-\begin{cmathpar}
+\begin{smathpar}
 \begin{array}{l}
 \forall a,b,c.~\txn{a}{b,c} \wedge \sameobj{b}{c} \wedge~ \vis{b}{a}
 \Rightarrow \vis{c}{a}
 \end{array}
-\end{cmathpar}
+\end{smathpar}
 Note that RC is the dual of atomicity; it can be guaranteed with no
 additional effort if all transactions in the system are atomic.
 
 MAV semantics ensures that if some operation in a transaction $T_1$
 witnesses the effects of another transaction $T_2$, then subsequent
 operations in $T_1$ will also witness the effects of $T_2$:
-\begin{cmathpar}
+\begin{smathpar}
 \begin{array}{l}
 \forall a,b,c,d.~\txn{a,b}{c,d} ~\wedge~ \so{a}{b} ~\wedge~ \vis{c}{a}
 ~\wedge~ \sameobj{d}{b} \Rightarrow \vis{d}{b}
 \end{array}
-\end{cmathpar}
+\end{smathpar}
 MAV semantics is useful for maintaining the integrity of foreign key
 constraints, materialized views and secondary
 updates~\cite{BailisHAT}.
@@ -136,12 +136,12 @@ the data store state. More concretely, RR requires that if an
 operation in transaction $T_1$ witnesses the effects of transaction
 $T_2$, then all the remaining operations should also witness the
 effects of $T_2$:
-\begin{cmathpar}
+\begin{smathpar}
 \begin{array}{l}
 \forall a,b,c,d.~\txn{a,b}{c,d} ~\wedge~ \vis{c}{a} ~\wedge~
 \sameobj{d}{b} \Rightarrow \vis{d}{b}
 \end{array}
-\end{cmathpar}
+\end{smathpar}
 Note that this is precisely the semantics required by the
 \cf{totalBalance} transaction to ensure that it returns a balance that
 reflects a consistent snapshot of the data store. Hence, it is

@@ -58,7 +58,7 @@ read operation.}
 Observe that the counter RDT does not admit a decrement operation.
 Therefore, the value of a counter should appear to be monotonically
 increasing. Indeed, this property is what makes the RDT useful to
-implement, for example, a video view counter on Youtube.
+implement, for example, a video view counter on YouTube.
 Unfortunately, the monotonicity invariant can be violated in an
 eventually consistent execution.
 
@@ -82,12 +82,12 @@ a \rcf{read} witnesses an \rcf{inc} effect, all the subsequent
 effect. If we let $\sameobjZ$ relate effects over the same
 object, we can formalize this requirement using visibility ($\visZ$)
 and session order ($\soZ$) relations:
-\begin{cmathpar}
+\begin{smathpar}
 \begin{array}{l}
 \forall (a : \rcf{inc}), (b,c : \rcf{read}).
 \; \vis{a}{b} \conj \so{b}{c} \conj \sameobj{b}{c} \Rightarrow \vis{a}{c} 
 \end{array}
-\end{cmathpar}
+\end{smathpar}
 The above formula is in fact a valid specification that can be
 associated with counter RDT operations in \name. Note that the
 specification captures the guarantees required to enforce the
@@ -108,7 +108,7 @@ language.
 \begin{smathpar}
 \renewcommand{\arraystretch}{1.2}
 \begin{array}{rclcl}
-\multicolumn{5}{c}{
+\multicolumn{5}{l}{
   {a,b} \in \mathtt{EffVar} \qquad \qquad
   {\sf Op} \in \mathtt{OperName}
 }\\
@@ -116,15 +116,11 @@ language.
         \ALT \forall a.\cv \ALT \pi \\
 \tau		& \in	& \mathtt{EffType}	& \coloneqq &  {\sf Op}
         \ALT \tau \vee \tau \\
-\pi			&	\in & \mathtt{Prop} & \coloneqq & \true \ALT R(a,b)
-        \ALT \pi \vee \pi \\
-			  & 		&	 &  \ALT & \pi \wedge \pi \ALT \pi \Rightarrow \pi \\
-R				& \in & \mathtt{Relation}	& \coloneqq & \visZ \ALT \soZ
-        \ALT \sameobjZ \ALT = \\
-				&			&	 &  \ALT & R \cup R \ALT R \cap R \ALT R^+ \\
+\pi			&	\in & \mathtt{Prop} & \coloneqq & \true \ALT R(a,b) \ALT \pi \vee \pi  \ALT  \pi \wedge \pi \ALT \pi \Rightarrow \pi \\
+R				& \in & \mathtt{Relation}	& \coloneqq & \visZ \ALT \soZ \ALT \sameobjZ \ALT = \ALT R \cup R \ALT R \cap R \ALT R^+ \\
 \end{array}
 \end{smathpar}
-\caption{Contract language.}
+\caption{Syntax of the specification language.}
 \label{fig:specification-lang}
 \end{figure}
 
@@ -149,7 +145,7 @@ primitive relations. Commonly used derived relations are the
 \sameobjZ$), \emph{happens-before order} ($\small \hbZ = (\soZ ~\cup~
 \visZ)^+$) and the \emph{same object happens-before order} ($\small
 \hboZ = (\sooZ ~\cup~ \visZ)^+$). For example, the same object session
-order ($\sooZ$) can be used to succintly represent the specification
+order ($\sooZ$) can be used to succinctly represent the specification
 of counter RDT's consistency requirement:
 \begin{cmathpar}
 \begin{array}{l}
@@ -171,13 +167,13 @@ of counter RDT's consistency requirement:
 \subsection{Consistency Guarantees}
 \label{sec:classification-scheme}
 
-To help programmers eliminate certain class of anomalies in their
+To help programmers eliminate certain classes of anomalies in their
 applications, Terry \emph{et al.} equip their data store Bayou~\cite{Bayou}
 with four incomparable consistency levels called \emph{session
 guarantees}~\cite{Session}. While Terry \emph{et al.} realize efficient
 implementations of session guarantees making use of low-level
 properties of their store, the semantics of these guarantees can
-nonetheless can be captured succintly within \name's abstract model thus:
+nonetheless can be captured succinctly within \name's abstract model thus:
 \begin{smathpar}
 \renewcommand{\arraystretch}{1.2}
 \begin{array}{rcl}
@@ -213,7 +209,7 @@ to avoid the anomaly shown in Fig.~\ref{fig:missingUpdate}, where a
 \rcf{read} that succeeds an \rcf{inc} fails to witness the effect of
 \rcf{inc}, but a later \rcf{read} witnesses the effect. The anomaly
 can also be avoided by running \rcf{inc} and \rcf{read} under the
-QUORUM consistency level offered by some off-the-shelf key-value
+{\sc quorum} consistency level offered by some off-the-shelf key-value
 stores, but doing so requires non-trivial reasoning over the semantics
 of quorum operations (\emph{e.g.}, strict/sloppy) and conflict
 resolution strategies (eg., LWW) to arrive at this conclusion. In
@@ -236,16 +232,16 @@ levels:
 \Rightarrow \vis{a}{b} \vee \vis{b}{c} \\
 \end{array}
 \end{smathpar}
-It is not immediately apparent which among CV, CC and SC meet
-the requirements of a counter (CR). Fortunately, we can leverage the power of automated theorem
-prover (\emph{e.g.}, Z3)  to prove that the specification of CR is
-stronger than CV, but weaker than CC and SC, thus letting us
-deduce that counter's requirements can be met both under causal and
-strong consistency levels. A theorem prover can also be used to prove that among
-CC and SC, CC is weaker. Assuming that weaker guarantees incur
-lower cost to enforce availability, it is reasonable to conclude that
-counter's \rcf{read} operations should be executed under causal
-consistency to enforce  monotonicity. 
+It is not immediately apparent which among CV, CC and SC meet the
+requirements of a counter (CR). Fortunately, we can leverage the power
+of automated theorem provers (\emph{e.g.}, Z3)  to prove that the
+specification of CR is stronger than CV, but weaker than CC and SC,
+thus letting us deduce that counter's requirements can be met both
+under causal and strong consistency levels. A theorem prover can also
+be used to prove that among CC and SC, CC is weaker. Assuming that
+weaker guarantees incur lower cost to enforce availability, it is
+reasonable to conclude that counter's \rcf{read} operations should be
+executed under causal consistency to enforce  monotonicity. 
 
 The analysis described informally above is formalized as a
 \emph{classification scheme}~\cite{pldi15} in \name.  This scheme

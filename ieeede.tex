@@ -22,6 +22,7 @@
 \usepackage[numbers]{natbib}
 \usepackage{wrapfig}
 \usepackage{textcomp}
+\usepackage[breaklinks,draft=false,backref]{hyperref}
 
 \ifpdf
   \usepackage{hyperref}
@@ -105,12 +106,24 @@
 \date{}
 \begin{document}
 
-\title{A Language Framework for Programming With Weak Consistency and
-Isolation}
+\title{Representation without Taxation: A Uniform, Low-Overhead, and
+High-Level Interface to Eventually Consistent Key-Value Stores}
 %\subtitle{Research Summary}
 
-% \author{Gowtham Kaki \\ \small{Purdue University} \hspace*{0.1in}
-%   \small{{\tt gkaki@purdue.edu}} }
+\author{
+  KC Sivaramakrishnan\thanks{This work was done at Purdue University, USA.} \\ 
+  \small{University of Cambridge, UK}\\
+  \small{{sk826@cl.cam.ac.uk}} 
+  \and
+  Gowtham Kaki \\ 
+  \small{Purdue University, USA}\\
+  \small{{gkaki@purdue.edu}} 
+  \and
+  Suresh Jagannathan\\
+  \small{Purdue University, USA}\\
+  \small{{suresh@cs.purdue.edu}} 
+}
+
 
 \maketitle
 
@@ -132,9 +145,9 @@ consistency levels to address the need for varying consistency
 guarantees.  However, these consistency levels often have
 poorly-defined \emph{ad hoc} semantics that is usually too low-level
 from the perspective of an application to relate their guarantees to
-the invariants that must be respected by the application.  Moreover,
-these guarantees are often defined in way that is strongly influenced
-by a specific implementation of the data store.  While such low-level
+invariants that must be respected by the application.  Moreover, these
+guarantees are often defined in way that is strongly influenced by a
+specific implementation of the data store.  While such low-level
 implementation-dependent solutions do not readily cater to the
 high-level requirements of an application, relying on ill-defined
 guarantees additionally complicates the already hard task of reasoning

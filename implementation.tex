@@ -1,9 +1,9 @@
 \section{Implementation}
 \label{sec:implementation}
 
-The abstract model of \name, optionally extended with a choosen set of
+The abstract model of \name, optionally extended with a chosen set of
 high-level consistency and isolation guarantees, can be instantiated
-on top any eventually consistent key-value store. We now describe a
+on top of any eventually consistent key-value store. We now describe a
 reference implementation of \name on top of Cassandra's key-value
 store~\cite{Cassandra}. Our implementation supports CV, CC, and SC
 consistency levels (\S~\ref{sec:classification-scheme}) for data type
@@ -30,7 +30,7 @@ Hence, rows with the same partition key (together referred to as a
 consistent hashing maps a partition key to a \emph{vnode}, which, in
 common case, maps to a single physical machine.}. Within each
 partition, rows are clustered and sorted on the values of their
-clustering columns. \name relies on these properties to minize the
+clustering columns. \name relies on these properties to minimize the
 latency of querying object state stored in Cassandra.
 
 Recall that the state of an object in \name is represented as a set of
@@ -38,7 +38,7 @@ effects. An effect generated as a result of executing an effectful
 operation (eg.,\C{inc} or \C{withdraw}) inserts a new row
 $(o,\allowbreak s,\allowbreak i, \allowbreak txn,\allowbreak val,
 \allowbreak deps)$, where $o$ is the identifier of the object on which
-the operation is perfomed, $s$ is the indentifier of the session that
+the operation is performed, $s$ is the identifier of the session that
 issued the operation, and $i$ is operation's sequence number within
 its session. The optional $txn$ column identifies the transaction (if
 any). The column $val$ is the value associated with the effect (eg:
@@ -47,13 +47,13 @@ any). The column $val$ is the value associated with the effect (eg:
 \{e_1 \ALT \vis{e_1}{e} \wedge \neg(\exists e_2.\vis{e_1}{e_2} \wedge
 \vis{e_2}{e})\}$. The primary key of this row is a composite of
 $(o,s,i)$, making $o$ the partition key, and $s$ and $i$ clustering
-columns. Thus, effects on same object belong to the same partition,
-minizing the latency of reading its state. Within the partition,
-effects are clustered (and sorted), first on $s$, then on $i$.
-Consequently, range queries on $s$ and $i$, such as the set of effects
-that precede a given effect in the same session (i.e., effects with
-same $o$ and $s$, but lesser $i$), are efficient. This data model has
-been crafted to enable efficient implementations of consistency
+columns. Thus, effects on the same object belong to the same
+partition, minimizing the latency of reading its state. Within the
+partition, effects are clustered (and sorted), first on $s$, then on
+$i$.  Consequently, range queries on $s$ and $i$, such as the set of
+effects that precede a given effect in the same session (i.e., effects
+with same $o$ and $s$, but lesser $i$), are efficient. This data model
+has been crafted to enable efficient implementations of consistency
 guarantees, such as session guarantees described in
 \S~\ref{sec:classification-scheme}.
 
@@ -96,7 +96,7 @@ in the shim layer state of $o$, then a blocking read query for a row
 with primary key $(o,s,i-1)$ needs to be issued by the shim layer.
 
 Strongly consistent operations are performed after obtaining a
-distributed global lock. Distributed locks can be implemented with the
+distributed global lock. Distributed lock is implemented with the
 help of Cassandra's conditional updates (lightweight transactions). To
 prevent deadlocks due to crash failures of the lock owner, the lock is
 leased only for a pre-determined amount of time. Lease functionality
@@ -108,7 +108,7 @@ Multi-key coordination-free transactions are implemented in \name by
 exploiting the shim layer's default CV consistency guarantee. Recall that
 the shim layer does not include an effect unless all its
 dependencies are also included. For every transaction, \name
-instantiates a special transaction marker effect $m$ that is is
+instantiates a special transaction marker effect $m$ that is
 included as a dependence to every effect generated in the transaction.
 Importantly, the marker $m$ is not inserted into the backing store
 until and unless the transaction finishes execution. Now, any replica

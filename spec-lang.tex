@@ -48,11 +48,19 @@ operation (eg., \rcf{inc}) returns a new effect.
 
 \begin{figure}[ht]
 \centering
-\subfigure[Monotonicity Violation]{\label{fig:monotonicityViolation}\includegraphics[width=0.55\columnwidth]{Figures/monotonicityViolation}}
-%\hfill
+\subcaptionbox[Monotonicity Violation] {
+  \label{fig:monotonicityViolation}
+} [
+  0.55\columnwidth
+] {
+  \includegraphics[width=0.55\columnwidth]{Figures/monotonicityViolation}
+}
 \hspace*{0.5in}
-\subfigure[Missing
-Update]{\label{fig:missingUpdate}\includegraphics[scale=0.9]{Figures/missingUpdate}}
+\subcaptionbox[Missing Update] {
+  \label{fig:missingUpdate}
+}{
+  \includegraphics[scale=0.9]{Figures/missingUpdate}
+}
 \hfill
 \caption{Anomalies possible under eventual consistency for the counter
 read operation.}

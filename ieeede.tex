@@ -4,13 +4,12 @@
 \usepackage[scaled]{helvet} % see www.ctan.org/get/macros/latex/required/psnfss/psnfss2e.pdf
 \usepackage{url}                  % format URLs
 \usepackage{listings}          % format code
-\usepackage{enumitem}      % adjust spacing in enums
-\usepackage[tight,hang]{subfigure}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{xspace}
 \usepackage{graphicx}
 \usepackage{mathtools}
 \usepackage{mathpartir}
-%\usepackage{minionpro}
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -128,11 +127,6 @@ High-Level Interface to Eventually Consistent Key-Value Stores}
 \maketitle
 
 \begin{abstract}
-% Due to the inevitable tradeoff between consistency and availability in
-% an asynchronous distributed system, a geo-distributed application is
-% forced to choose between either being strongly consistent or being
-% highly availabile. Motivated by the strong correlation between high
-% availability and user satisfaction, 
 Geo-distributed web applications often favor high availability over
 strong consistency.  In response to this bias, modern-day replicated
 data stores often eschew sequential consistency in favor of weaker
